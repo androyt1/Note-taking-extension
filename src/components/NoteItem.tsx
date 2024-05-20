@@ -16,10 +16,10 @@ const NoteItem = ({
     isExpanded: boolean;
 }) => {
     return (
-        <li className='border-b p-2 flex justify-between items-center'>
+        <li className='border-b p-2 flex justify-between items-center odd:bg-gray-100'>
             <button className='w-full text-left' onClick={() => onToggleExpand(note.id)}>
                 <div>
-                    <span className='block'>
+                    <span className='block text-base font-semibold'>
                         {isExpanded ? note.text : `${note.text.substring(0, 20)}...`} (
                         {note.category})
                     </span>
