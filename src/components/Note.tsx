@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
 
-interface NoteProps {
-    id: number;
-    text: string;
-    category: string;
-    priority: string;
-    dueDate: string;
-}
-
 const Note = () => {
     const [notes, setNotes] = useState<NoteProps[]>([]);
     const [newNote, setNewNote] = useState<string>("");
