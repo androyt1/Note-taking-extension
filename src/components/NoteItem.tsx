@@ -1,3 +1,7 @@
+import { FiEdit } from "react-icons/fi";
+import { AiFillDelete } from "react-icons/ai";
+import { formatDate } from "../utils";
+
 const NoteItem = ({
     note,
     onEdit,
@@ -19,18 +23,22 @@ const NoteItem = ({
                         {isExpanded ? note.text : `${note.text.substring(0, 20)}...`} (
                         {note.category})
                     </span>
-                    <span className='block text-sm text-gray-500'>Priority: {note.priority}</span>
-                    <span className='block text-sm text-gray-500'>Due: {note.dueDate}</span>
+                    <span className='block text-xs text-gray-500'>
+                        <span className='font-semibold'>Priority</span>: {note.priority}
+                    </span>
+                    <span className='block text-xs text-gray-500'>
+                        <span className='font-semibold'>Due</span>: {formatDate(note.dueDate)}
+                    </span>
                 </div>
             </button>
-            <div>
+            <div className='flex items-center justify-end space-x-4'>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onEdit(note);
                     }}
                     className='ml-2 text-blue-500'>
-                    Edit
+                    <FiEdit size={18} />
                 </button>
                 <button
                     onClick={(e) => {
@@ -38,7 +46,7 @@ const NoteItem = ({
                         onDelete(note.id);
                     }}
                     className='ml-2 text-red-500'>
-                    Delete
+                    <AiFillDelete size={18} />
                 </button>
             </div>
         </li>
