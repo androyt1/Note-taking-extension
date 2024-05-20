@@ -20,3 +20,21 @@ type PaginationProps = {
     handlePreviousPage: () => void;
     handleNextPage: () => void;
 };
+
+type CategoryFormProps = {
+    newCategory: string;
+    showCategoryEdit: boolean;
+    addCategory: () => void;
+    setNewCategory: (value: React.SetStateAction<string>) => void;
+    setShowCategoryEdit: (value: React.SetStateAction<boolean>) => void;
+};
+
+type EditCategoryProp = {
+    categories: string[];
+    editCategoryIndex: number | null;
+    editedCategory: string;
+    setEditedCategory: (value: React.SetStateAction<string>) => void;
+    updateCategory: (index: number) => void;
+    setEditCategoryIndex: (value: React.SetStateAction<number | null>) => void;
+    deleteCategory: (index: number) => void;
+};
