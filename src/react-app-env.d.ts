@@ -13,3 +13,10 @@ type NoteFormProps = {
     onSaveNote: (note: NoteProps) => void;
     editNote?: NoteProps | null;
 };
+
+type PaginationProps = {
+    currentPage: number;
+    totalPages: number;
+    handlePreviousPage: () => void;
+    handleNextPage: () => void;
+};
