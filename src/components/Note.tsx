@@ -176,22 +176,28 @@ const Note = () => {
                     <div className='mb-4 p-2 bg-red-200 text-red-800 rounded'>
                         <ul>
                             {errors.map((error, index) => (
-                                <li key={index}>{error}</li>
+                                <li key={`${index}-${error}`}>{error}</li>
                             ))}
                         </ul>
                     </div>
                 )}
-                <label className='block mb-1'>Note Text</label>
+                <label htmlFor='note' className='block mb-1'>
+                    Note Text
+                </label>
                 <input
                     type='text'
+                    id='note'
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     className='border p-2 mb-2 w-full'
                     placeholder='Type your note here...'
                 />
-                <label className='block mb-1'>Category</label>
+                <label htmlFor='category' className='block mb-1'>
+                    Category
+                </label>
                 <select
                     value={noteCategory}
+                    id='category'
                     onChange={(e) => setNoteCategory(e.target.value)}
                     className='border p-2 mb-2 w-full'>
                     {categories.map((category) => (
@@ -200,18 +206,24 @@ const Note = () => {
                         </option>
                     ))}
                 </select>
-                <label className='block mb-1'>Priority</label>
+                <label htmlFor='priority' className='block mb-1'>
+                    Priority
+                </label>
                 <select
                     value={notePriority}
+                    id='priority'
                     onChange={(e) => setNotePriority(e.target.value)}
                     className='border p-2 mb-2 w-full'>
                     <option value='High'>High</option>
                     <option value='Medium'>Medium</option>
                     <option value='Low'>Low</option>
                 </select>
-                <label className='block mb-1'>Due Date</label>
+                <label htmlFor='date' className='block mb-1'>
+                    Due Date
+                </label>
                 <input
                     type='date'
+                    id='date'
                     value={noteDueDate}
                     min={today}
                     onChange={(e) => setNoteDueDate(e.target.value)}
@@ -224,9 +236,12 @@ const Note = () => {
                 </button>
             </div>
             <div className='mb-4 flex'>
-                <label className='block mb-1'>New Category</label>
+                <label htmlFor='newCategory' className='block mb-1'>
+                    New Category
+                </label>
                 <input
                     type='text'
+                    id='newCategory'
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     className='border p-2 mr-2 w-full'
@@ -237,9 +252,12 @@ const Note = () => {
                 </button>
             </div>
             <div className='mb-4'>
-                <label className='block mb-1'>Search Notes</label>
+                <label htmlFor='search' className='block mb-1'>
+                    Search Notes
+                </label>
                 <input
                     type='text'
+                    id='search'
                     value={searchQuery}
                     onChange={(e) => filterNotesBySearchQuery(e.target.value)}
                     className='border p-2 mb-2 w-full'
@@ -269,22 +287,25 @@ const Note = () => {
             </div>
             <ul>
                 {filteredNotes.map((note) => (
-                    <li
-                        key={note.id}
-                        className='border-b p-2 flex justify-between items-center cursor-pointer'
-                        onClick={() => toggleExpandNote(note.id)}>
-                        <div>
-                            <span className='block'>
-                                {expandedNoteId === note.id
-                                    ? note.text
-                                    : truncateText(note.text, 20)}{" "}
-                                ({note.category})
-                            </span>
-                            <span className='block text-sm text-gray-500'>
-                                Priority: {note.priority}
-                            </span>
-                            <span className='block text-sm text-gray-500'>Due: {note.dueDate}</span>
-                        </div>
+                    <li key={note.id} className='border-b p-2 flex justify-between items-center'>
+                        <button
+                            className='w-full text-left'
+                            onClick={() => toggleExpandNote(note.id)}>
+                            <div>
+                                <span className='block'>
+                                    {expandedNoteId === note.id
+                                        ? note.text
+                                        : truncateText(note.text, 20)}{" "}
+                                    ({note.category})
+                                </span>
+                                <span className='block text-sm text-gray-500'>
+                                    Priority: {note.priority}
+                                </span>
+                                <span className='block text-sm text-gray-500'>
+                                    Due: {note.dueDate}
+                                </span>
+                            </div>
+                        </button>
                         <div>
                             <button
                                 onClick={(e) => {
