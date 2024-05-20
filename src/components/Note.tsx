@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
 
+interface NoteProps {
+    id: number;
+    text: string;
+    category: string;
+    priority: string;
+    dueDate: string;
+}
+
 const Note = () => {
     const [notes, setNotes] = useState<NoteProps[]>([]);
     const [newNote, setNewNote] = useState<string>("");
@@ -12,24 +20,56 @@ const Note = () => {
     const [activeCategory, setActiveCategory] = useState<string>("All");
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [filteredNotes, setFilteredNotes] = useState<NoteProps[]>([]);
+    const [errors, setErrors] = useState<string[]>([]);
+    const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
 
     useEffect(() => {
         chrome.storage.sync.get(["notes"], (result) => {
+            console.log("Fetched notes from storage:", result.notes);
             if (result.notes) {
                 setNotes(result.notes);
                 setFilteredNotes(result.notes);
             }
         });
         chrome.storage.sync.get(["categories"], (result) => {
+            console.log("Fetched categories from storage:", result.categories);
             if (result.categories) {
                 setCategories(result.categories);
             }
         });
     }, []);
 
+    const validateInputs = () => {
+        const errors = [];
+        if (!newNote.trim()) {
+            errors.push("Note text is required.");
+        }
+        if (!categories.includes(noteCategory)) {
+            errors.push("Invalid category selected.");
+        }
+        if (!["High", "Medium", "Low"].includes(notePriority)) {
+            errors.push("Invalid priority selected.");
+        }
+        if (!noteDueDate) {
+            errors.push("Due date is required.");
+        } else if (new Date(noteDueDate) < new Date()) {
+            errors.push("Due date cannot be in the past.");
+        }
+        return errors;
+    };
+
     const addOrEditNote = () => {
+        const validationErrors = validateInputs();
+        if (validationErrors.length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+        setErrors([]);
+
+        let updatedNotes: NoteProps[];
+
         if (editNoteId !== null) {
-            const updatedNotes = notes.map((note) =>
+            updatedNotes = notes.map((note) =>
                 note.id === editNoteId
                     ? {
                           ...note,
@@ -40,9 +80,11 @@ const Note = () => {
                       }
                     : note
             );
+
             setNotes(updatedNotes);
             setFilteredNotes(updatedNotes);
             setEditNoteId(null);
+            console.log("Updated notes:", updatedNotes);
         } else {
             const newNoteObj = {
                 id: Date.now(),
@@ -51,21 +93,31 @@ const Note = () => {
                 priority: notePriority,
                 dueDate: noteDueDate,
             };
-            const updatedNotes = [...notes, newNoteObj];
+            console.log("New Note", newNoteObj);
+            updatedNotes = [...notes, newNoteObj];
+            console.log("Updated Notes", updatedNotes);
             setNotes(updatedNotes);
             setFilteredNotes(updatedNotes);
+            console.log("New note added:", newNoteObj);
+            console.log("Updated notes:", updatedNotes);
         }
+
         setNewNote("");
         setNotePriority("Medium");
         setNoteDueDate("");
-        chrome.storage.sync.set({ notes });
+
+        chrome.storage.sync.set({ notes: updatedNotes }, () => {
+            console.log("Notes saved to storage:", updatedNotes);
+        });
     };
 
     const deleteNote = (id: number) => {
         const updatedNotes = notes.filter((note) => note.id !== id);
         setNotes(updatedNotes);
         setFilteredNotes(updatedNotes);
-        chrome.storage.sync.set({ notes: updatedNotes });
+        chrome.storage.sync.set({ notes: updatedNotes }, () => {
+            console.log("Notes updated in storage after deletion:", updatedNotes);
+        });
     };
 
     const startEditNote = (note: NoteProps) => {
@@ -98,15 +150,38 @@ const Note = () => {
         if (newCategory && !categories.includes(newCategory)) {
             const updatedCategories = [...categories, newCategory];
             setCategories(updatedCategories);
-            chrome.storage.sync.set({ categories: updatedCategories });
+            chrome.storage.sync.set({ categories: updatedCategories }, () => {
+                console.log("Categories saved to storage:", updatedCategories);
+            });
             setNewCategory("");
         }
+    };
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const truncateText = (text: string, length: number) => {
+        if (text.length <= length) return text;
+        return text.slice(0, length) + "...";
+    };
+
+    const toggleExpandNote = (id: number) => {
+        setExpandedNoteId(expandedNoteId === id ? null : id);
     };
 
     return (
         <div className='p-5 w-[450px] mx-auto bg-white rounded-xl shadow-md space-y-4'>
             <h1 className='text-2xl font-bold mb-4'>Note Taking Extension</h1>
             <div className='mb-4'>
+                {errors.length > 0 && (
+                    <div className='mb-4 p-2 bg-red-200 text-red-800 rounded'>
+                        <ul>
+                            {errors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+                <label className='block mb-1'>Note Text</label>
                 <input
                     type='text'
                     value={newNote}
@@ -114,6 +189,7 @@ const Note = () => {
                     className='border p-2 mb-2 w-full'
                     placeholder='Type your note here...'
                 />
+                <label className='block mb-1'>Category</label>
                 <select
                     value={noteCategory}
                     onChange={(e) => setNoteCategory(e.target.value)}
@@ -124,6 +200,7 @@ const Note = () => {
                         </option>
                     ))}
                 </select>
+                <label className='block mb-1'>Priority</label>
                 <select
                     value={notePriority}
                     onChange={(e) => setNotePriority(e.target.value)}
@@ -132,9 +209,11 @@ const Note = () => {
                     <option value='Medium'>Medium</option>
                     <option value='Low'>Low</option>
                 </select>
+                <label className='block mb-1'>Due Date</label>
                 <input
                     type='date'
                     value={noteDueDate}
+                    min={today}
                     onChange={(e) => setNoteDueDate(e.target.value)}
                     className='border p-2 mb-2 w-full'
                 />
@@ -145,6 +224,7 @@ const Note = () => {
                 </button>
             </div>
             <div className='mb-4 flex'>
+                <label className='block mb-1'>New Category</label>
                 <input
                     type='text'
                     value={newCategory}
@@ -157,6 +237,7 @@ const Note = () => {
                 </button>
             </div>
             <div className='mb-4'>
+                <label className='block mb-1'>Search Notes</label>
                 <input
                     type='text'
                     value={searchQuery}
@@ -188,10 +269,16 @@ const Note = () => {
             </div>
             <ul>
                 {filteredNotes.map((note) => (
-                    <li key={note.id} className='border-b p-2 flex justify-between items-center'>
+                    <li
+                        key={note.id}
+                        className='border-b p-2 flex justify-between items-center cursor-pointer'
+                        onClick={() => toggleExpandNote(note.id)}>
                         <div>
                             <span className='block'>
-                                {note.text} ({note.category})
+                                {expandedNoteId === note.id
+                                    ? note.text
+                                    : truncateText(note.text, 20)}{" "}
+                                ({note.category})
                             </span>
                             <span className='block text-sm text-gray-500'>
                                 Priority: {note.priority}
@@ -200,12 +287,18 @@ const Note = () => {
                         </div>
                         <div>
                             <button
-                                onClick={() => startEditNote(note)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditNote(note);
+                                }}
                                 className='ml-2 text-blue-500'>
                                 Edit
                             </button>
                             <button
-                                onClick={() => deleteNote(note.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteNote(note.id);
+                                }}
                                 className='ml-2 text-red-500'>
                                 Delete
                             </button>
