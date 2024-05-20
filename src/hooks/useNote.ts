@@ -10,85 +10,62 @@ export interface NoteProps {
 
 const useNotes = () => {
     const [notes, setNotes] = useState<NoteProps[]>([]);
-    const [newNote, setNewNote] = useState<string>("");
-    const [editNoteId, setEditNoteId] = useState<number | null>(null);
-    const [noteCategory, setNoteCategory] = useState<string>("General");
-    const [notePriority, setNotePriority] = useState<string>("Medium");
-    const [noteDueDate, setNoteDueDate] = useState<string>("");
+    const [filteredNotes, setFilteredNotes] = useState<NoteProps[]>([]);
+    const [activeCategory, setActiveCategory] = useState<string>("All");
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
         chrome.storage.sync.get(["notes"], (result) => {
-            console.log("Fetched notes from storage:", result.notes);
             if (result.notes) {
                 setNotes(result.notes);
+                setFilteredNotes(result.notes);
             }
         });
     }, []);
 
-    const addOrEditNote = () => {
-        if (editNoteId !== null) {
-            const updatedNotes = notes.map((note) =>
-                note.id === editNoteId
-                    ? {
-                          ...note,
-                          text: newNote,
-                          category: noteCategory,
-                          priority: notePriority,
-                          dueDate: noteDueDate,
-                      }
-                    : note
-            );
-            setNotes(updatedNotes);
-            setEditNoteId(null);
+    const addOrEditNote = (newNote: NoteProps) => {
+        let updatedNotes;
+        if (newNote.id && newNote.id !== 0) {
+            updatedNotes = notes.map((note) => (note.id === newNote.id ? newNote : note));
         } else {
-            const newNoteObj = {
-                id: Date.now(),
-                text: newNote,
-                category: noteCategory,
-                priority: notePriority,
-                dueDate: noteDueDate,
-            };
-            const updatedNotes = [...notes, newNoteObj];
-            setNotes(updatedNotes);
+            const newNoteWithId = { ...newNote, id: Date.now() };
+            updatedNotes = [...notes, newNoteWithId];
         }
-        setNewNote("");
-        setNotePriority("Medium");
-        setNoteDueDate("");
-        chrome.storage.sync.set({ notes }, () => {
-            console.log("Notes updated in storage:", notes);
-        });
+        setNotes(updatedNotes);
+        setFilteredNotes(updatedNotes);
+        chrome.storage.sync.set({ notes: updatedNotes });
     };
 
     const deleteNote = (id: number) => {
         const updatedNotes = notes.filter((note) => note.id !== id);
         setNotes(updatedNotes);
-        chrome.storage.sync.set({ notes: updatedNotes }, () => {
-            console.log("Notes updated in storage after deletion:", updatedNotes);
-        });
+        setFilteredNotes(updatedNotes);
+        chrome.storage.sync.set({ notes: updatedNotes });
     };
 
-    const startEditNote = (note: NoteProps) => {
-        setNewNote(note.text);
-        setEditNoteId(note.id);
-        setNoteCategory(note.category);
-        setNotePriority(note.priority);
-        setNoteDueDate(note.dueDate);
+    const filterNotesByCategory = (category: string) => {
+        setActiveCategory(category);
+        setFilteredNotes(
+            category === "All" ? notes : notes.filter((note) => note.category === category)
+        );
+    };
+
+    const filterNotesBySearchQuery = (query: string) => {
+        setSearchQuery(query);
+        setFilteredNotes(
+            notes.filter((note) => note.text.toLowerCase().includes(query.toLowerCase()))
+        );
     };
 
     return {
         notes,
-        newNote,
-        setNewNote,
-        editNoteId,
-        noteCategory,
-        setNoteCategory,
-        notePriority,
-        setNotePriority,
-        noteDueDate,
-        setNoteDueDate,
+        filteredNotes,
         addOrEditNote,
         deleteNote,
-        startEditNote,
+        activeCategory,
+        filterNotesByCategory,
+        searchQuery,
+        filterNotesBySearchQuery,
     };
 };
 

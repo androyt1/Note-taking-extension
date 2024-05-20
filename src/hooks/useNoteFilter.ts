@@ -1,5 +1,3 @@
-// src/hooks/useNoteFilter.ts
-
 import { useState, useEffect } from "react";
 
 const useNoteFilter = (notes: NoteProps[]) => {
