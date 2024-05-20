@@ -19,9 +19,31 @@ const NoteApp = () => {
     const [editNote, setEditNote] = useState<NoteProps | null>(null);
     const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const notesPerPage = 2;
+
+    const indexOfLastNote = currentPage * notesPerPage;
+    const indexOfFirstNote = indexOfLastNote - notesPerPage;
+    const currentNotes = filteredNotes.slice(indexOfFirstNote, indexOfLastNote);
+
+    const totalPages = Math.ceil(filteredNotes.length / notesPerPage);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
     const handleSaveNote = (note: NoteProps) => {
         addOrEditNote(note);
-        setEditNote(null); // Reset editNote state after saving
+        setEditNote(null);
+        setCurrentPage(1);
     };
 
     return (
@@ -55,12 +77,29 @@ const NoteApp = () => {
                 onFilter={filterNotesByCategory}
             />
             <NoteList
-                notes={filteredNotes}
+                notes={currentNotes}
                 onEdit={setEditNote}
                 onDelete={deleteNote}
                 onToggleExpand={setExpandedNoteId}
                 expandedNoteId={expandedNoteId}
             />
+            <div className='flex justify-between items-center'>
+                <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className='bg-blue-500 text-white p-2 rounded disabled:bg-gray-300'>
+                    Previous
+                </button>
+                <span className='text-gray-700'>
+                    Page {currentPage} of {totalPages}
+                </span>
+                <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className='bg-blue-500 text-white p-2 rounded disabled:bg-gray-300'>
+                    Next
+                </button>
+            </div>
         </div>
     );
 };
